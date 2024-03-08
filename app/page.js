@@ -5,33 +5,30 @@ import { cleanAndTransformBlocks } from "utils/cleanAndTransformBlocks";
 
 export const dynamic = "force-dynamic";
 
+const HOME_QUERY = gql`
+	query HomePageQuery {
+		nodeByUri(uri: "/") {
+			... on Page {
+				id
+				blocks(postTemplate: false)
+			}
+		}
+	}
+`;
+
 const getData = async () => {
 	const data = await client.query({
-		query: gql`
-			query NewQuery {
-				nodeByUri(uri: "/") {
-					... on Page {
-						id
-						blocks(postTemplate: false)
-					}
-				}
-			}
-		`,
+		query: HOME_QUERY,
 	});
 
 	return data;
 };
 
-const Home = async (props) => {
+const Home = async () => {
 	const { data } = await getData();
 
 	const blocks = data.nodeByUri.blocks;
-
-	return (
-		<div>
-			<BlockRenderer blocks={cleanAndTransformBlocks(blocks)} />
-		</div>
-	);
+	return <BlockRenderer blocks={cleanAndTransformBlocks(blocks)} />;
 };
 
 export default Home;

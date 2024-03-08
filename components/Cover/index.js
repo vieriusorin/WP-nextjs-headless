@@ -7,7 +7,7 @@ export const Cover = ({ children, background }) => {
 				fill='fill'
 				src={background}
 				objectFit='cover'
-				className='minx-blend-soft-light'
+				className='mix-blend-soft-light'
 			/>
 			<div className='max-w-5xl z-10'>{children}</div>
 		</div>

@@ -2,7 +2,7 @@
 const nextConfig = {
 	reactStrictMode: true,
 	images: {
-		domains: ["wp-next-headless.local"],
+		domains: ["wp-next-headless.local", "localhost"],
 	},
 };
 
