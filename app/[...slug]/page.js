@@ -1,7 +1,8 @@
 import client from "client";
 import { gql } from "@apollo/client";
-import { BlockRenderer } from "components";
+import { BlockRenderer } from "components/BlockRenderer";
 import { cleanAndTransformBlocks } from "utils/cleanAndTransformBlocks";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -13,12 +14,17 @@ const PAGE_QUERY = gql`
 				title
 				blocks(postTemplate: false)
 			}
+			... on Property {
+				id
+				title
+				blocks(postTemplate: false)
+			}
 		}
 	}
 `;
 
 const getData = async (context) => {
-	const uri = `${context.params.slug.join("/")}/`;
+	const uri = context.params?.slug ? `${context.params.slug.join("/")}/` : "/";
 
 	const data = await client.query({
 		query: PAGE_QUERY,
@@ -32,15 +38,14 @@ const getData = async (context) => {
 
 const Slug = async (props) => {
 	const { data } = await getData(props);
+
+	if (data.nodeByUri === null) {
+		redirect("/404");
+	}
+
 	const blocks = data.nodeByUri.blocks;
 
-	console.log(blocks);
-
-	return (
-		<div>
-			<BlockRenderer blocks={cleanAndTransformBlocks(blocks)} />
-		</div>
-	);
+	return <BlockRenderer blocks={cleanAndTransformBlocks(blocks)} />;
 };
 
 export default Slug;

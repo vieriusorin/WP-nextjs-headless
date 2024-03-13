@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client";
 import client from "client";
-import { BlockRenderer } from "components";
+import { BlockRenderer } from "components/BlockRenderer";
 import { cleanAndTransformBlocks } from "utils/cleanAndTransformBlocks";
 
 export const dynamic = "force-dynamic";
