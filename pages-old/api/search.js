@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
+import { gql } from "@apollo/client";
+import client from "client";
 
-export async function POST(request) {
+const handler = async (req, res) => {
   try {
-    const filters = await request.json();
+    const filters = JSON.parse(req.body);
 
     let hasParkingFilter = ``;
     let petFriendlyFilter = ``;
@@ -50,13 +51,8 @@ export async function POST(request) {
       `;
     }
 
-    const response = await fetch(process.env.WP_GRAPHQL_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        query: `
+    const { data } = await client.query({
+      query: gql`
         query AllPropertiesQuery {
           properties(where: { 
             offsetPagination: { size: 3, offset: ${
@@ -98,15 +94,14 @@ export async function POST(request) {
           }
         }
       `,
-      }),
     });
-
-    const { data } = await response.json();
-    return NextResponse.json({
+    return res.status(200).json({
       total: data.properties.pageInfo.offsetPagination.total,
       properties: data.properties.nodes,
     });
   } catch (e) {
     console.log("ERROR: ", e);
   }
-}
+};
+
+export default handler;

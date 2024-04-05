@@ -1,34 +1,20 @@
-import { gql } from "@apollo/client";
-import client from "client";
 import { BlockRenderer } from "components/BlockRenderer";
-import { cleanAndTransformBlocks } from "utils/cleanAndTransformBlocks";
+import { getPage } from "utils/getPage";
+import { notFound } from "next/navigation";
+import { getSeo } from "utils/getSeo";
 
-export const dynamic = "force-dynamic";
-
-const HOME_QUERY = gql`
-	query HomePageQuery {
-		nodeByUri(uri: "/") {
-			... on Page {
-				id
-				blocks(postTemplate: false)
-			}
-		}
+export default async function Home() {
+	const data = await getPage("/");
+	if (!data) {
+		notFound();
 	}
-`;
+	return <BlockRenderer blocks={data} />;
+}
 
-const getData = async () => {
-	const data = await client.query({
-		query: HOME_QUERY,
-	});
-
-	return data;
-};
-
-const Home = async () => {
-	const { data } = await getData();
-
-	const blocks = data.nodeByUri.blocks;
-	return <BlockRenderer blocks={cleanAndTransformBlocks(blocks)} />;
-};
-
-export default Home;
+export async function generateMetadata() {
+	const seo = await getSeo("/");
+	return {
+		title: seo?.title || "",
+		description: seo?.metaDesc || "",
+	};
+}

@@ -2,7 +2,8 @@ import { mapMainMenuItems } from "./mapMainMenuItems";
 
 export const getMenu = async () => {
   const params = {
-    query: `query MenuQuery {
+    query: `
+    query MenuQuery {
       acfOptionsMainMenu {
         mainMenu {
           callToActionButton {
@@ -37,12 +38,12 @@ export const getMenu = async () => {
   `,
   };
 
-  const response = await fetch(`${process.env.WP_GRAPHQL_URL}`, {
+  const response = await fetch(process.env.WP_GRAPHQL_URL, {
     method: "POST",
-    body: JSON.stringify(params),
     headers: {
       "Content-Type": "application/json",
     },
+    body: JSON.stringify(params),
   });
   const { data } = await response.json();
   return {

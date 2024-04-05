@@ -4,7 +4,11 @@ import { ButtonLink } from "components/ButtonLink/ButtonLink";
 import Link from "next/link";
 import { useState } from "react";
 
-export const MainMenu = ({ menuItems = [], callToActionButton }) => {
+export const MainMenu = ({
+	menuItems = [],
+	callToActionDestination,
+	callToActionLabel,
+}) => {
 	const [openMenus, setOpenMenus] = useState([]);
 
 	const toggleMenu = (id) => {
@@ -92,8 +96,8 @@ export const MainMenu = ({ menuItems = [], callToActionButton }) => {
 				</menu>
 
 				<ButtonLink
-					destination={callToActionButton.destination.uri}
-					label={callToActionButton.label.toUpperCase()}
+					destination={callToActionDestination}
+					label={callToActionLabel}
 				/>
 			</div>
 		</nav>

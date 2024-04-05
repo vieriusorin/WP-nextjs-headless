@@ -1,86 +1,86 @@
 "use client";
-
-import { useState, useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Pagination } from "./Pagination";
 import { Results } from "./Results";
-import { PaginationCustom } from "components/CustomPagination";
+import queryString from "query-string";
 import { Filters } from "./Filters";
 
 export const PropertySearch = () => {
-	const [propertiesFiltered, setPropertiesFiltered] = useState([]);
-	const [currentPage, setCurrentPage] = useState(0);
-	const [totalItems, setTotalItems] = useState(0);
-	const [itemsPerPage, setItemsPerPage] = useState(2);
+  const [properties, setProperties] = useState([]);
+  const [totalResults, setTotalResults] = useState(0);
+  const pageSize = 3;
+  const router = useRouter();
+  const pathname = usePathname();
 
-	const queryString = new URLSearchParams();
+  const search = async () => {
+    const { page, minPrice, maxPrice, hasParking, petFriendly } =
+      queryString.parse(window.location.search);
+    const filters = {};
+    if (minPrice) {
+      filters.minPrice = parseInt(minPrice);
+    }
+    if (maxPrice) {
+      filters.maxPrice = parseInt(maxPrice);
+    }
+    if (hasParking === "true") {
+      filters.hasParking = true;
+    }
+    if (petFriendly === "true") {
+      filters.petFriendly = true;
+    }
 
-	const fetchProperties = async (
-		page,
-		perPage,
-		petFriendly,
-		hasParking,
-		minPrice,
-		maxPrice
-	) => {
-		const response = await fetch(
-			`http://localhost:3000/api/search?page=${page}${
-				perPage ? "&perPage=" + perPage : ""
-			}${petFriendly ? "&petFriendly=" + petFriendly : ""}${
-				hasParking ? "&hasParking=" + hasParking : ""
-			}${minPrice ? "&minPrice=" + minPrice : ""}${
-				maxPrice ? "&maxPrice=" + maxPrice : ""
-			}`
-		);
-		const data = await response.json();
-		return data;
-	};
+    const response = await fetch(`/api/search`, {
+      method: "POST",
+      body: JSON.stringify({
+        page: parseInt(page || "1"),
+        ...filters,
+      }),
+    });
+    const data = await response.json();
+    setProperties(data.properties);
+    setTotalResults(data.total);
+  };
 
-	useEffect(() => {
-		if (currentPage) {
-			queryString.append("page", String(currentPage));
-		}
+  const handlePageClick = async (pageNumber) => {
+    const { petFriendly, hasParking, minPrice, maxPrice } = queryString.parse(
+      window.location.search
+    );
 
-		if (itemsPerPage) {
-			queryString.append("perPage", String(itemsPerPage));
-		}
-	}, [currentPage, itemsPerPage]);
+    router.push(
+      `${pathname}?page=${pageNumber}&petFriendly=${
+        petFriendly === "true"
+      }&hasParking=${
+        hasParking === "true"
+      }&minPrice=${minPrice}&maxPrice=${maxPrice}`
+    );
+  };
 
-	useEffect(() => {
-		fetchProperties(currentPage, itemsPerPage).then((data) => {
-			setPropertiesFiltered(data?.data?.properties);
-			setTotalItems(data?.data?.total);
-		});
-	}, [currentPage, itemsPerPage]);
+  useEffect(() => {
+    search();
+  }, []);
 
-	const handleSearch = async (petFriendly, hasParking, minPrice, maxPrice) => {
-		fetchProperties(
-			currentPage,
-			itemsPerPage,
-			petFriendly,
-			hasParking,
-			minPrice,
-			maxPrice
-		).then((data) => {
-			setPropertiesFiltered(data?.data?.properties);
-			setTotalItems(data?.data?.total);
-		});
-	};
+  const handleSearch = async ({
+    petFriendly,
+    hasParking,
+    minPrice,
+    maxPrice,
+  }) => {
+    // update our browser url
+    // search
+    router.push(
+      `${pathname}?page=1&petFriendly=${!!petFriendly}&hasParking=${!!hasParking}&minPrice=${minPrice}&maxPrice=${maxPrice}`
+    );
+  };
 
-	return (
-		<>
-			<Filters onSearch={handleSearch} />
-			{propertiesFiltered.length > 0 ? (
-				<Results properties={propertiesFiltered} />
-			) : (
-				<h1>No properties</h1>
-			)}
-			{totalItems > 0 && (
-				<PaginationCustom
-					totalItems={totalItems}
-					itemsPerPage={itemsPerPage}
-					currentPage={currentPage}
-					setCurrentPage={setCurrentPage}
-				/>
-			)}
-		</>
-	);
+  return (
+    <div>
+      <Filters onSearch={handleSearch} />
+      <Results properties={properties} />
+      <Pagination
+        onPageClick={handlePageClick}
+        totalPages={Math.ceil(totalResults / pageSize)}
+      />
+    </div>
+  );
 };

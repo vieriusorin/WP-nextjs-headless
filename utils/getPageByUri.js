@@ -1,74 +1,35 @@
 import { cleanAndTransformBlocks } from "./cleanAndTransformBlocks";
-import { mapMainMenuItems } from "./mapMainMenuItems";
 
-export const getPageByUri = async (uri) => {
-  const params = {
-    query: `query PageQuery($uri: String!) {
+export const getPage = async (uri) => {
+	const params = {
+		query: `
+    query PageQuery($uri: String!) {
       nodeByUri(uri: $uri) {
         ... on Page {
-          id
-          title
           blocks
         }
         ... on Property {
-          id
-          title
           blocks
-        }
-      }
-      acfOptionsMainMenu {
-        mainMenu {
-          callToActionButton {
-            label
-            destination {
-              ... on Page {
-                uri
-              }
-            }
-          }
-          menuItems {
-            menuItem {
-              destination {
-                ... on Page {
-                  uri
-                }
-              }
-              label
-            }
-            items {
-              destination {
-                ... on Page {
-                  uri
-                }
-              }
-              label
-            }
-          }
         }
       }
     }
   `,
-    variables: {
-      uri,
-    },
-  };
+		variables: {
+			uri,
+		},
+	};
 
-  const response = await fetch(`${process.env.WP_GRAPHQL_URL}`, {
-    method: "POST",
-    body: JSON.stringify(params),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-  const { data } = await response.json();
-  const blocks = cleanAndTransformBlocks(data.nodeByUri.blocks);
-  return {
-    title: data.nodeByUri.title,
-    mainMenuItems: mapMainMenuItems(data.acfOptionsMainMenu.mainMenu.menuItems),
-    callToActionLabel:
-      data.acfOptionsMainMenu.mainMenu.callToActionButton.label,
-    callToActionDestination:
-      data.acfOptionsMainMenu.mainMenu.callToActionButton.destination.uri,
-    blocks,
-  };
+	const response = await fetch(process.env.WP_GRAPHQL_URL, {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify(params),
+	});
+	const { data } = await response.json();
+	if (!data.nodeByUri) {
+		return null;
+	}
+	const blocks = cleanAndTransformBlocks(data.nodeByUri.blocks);
+	return blocks;
 };
